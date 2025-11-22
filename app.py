@@ -332,7 +332,101 @@ if "Age" in filtered.columns:                # Age kolonu mevcut mu kontrol edil
         marginal="box",                      # Üstte boxplot göster
         hover_data=["Gender", "Category"]    # Üzerine basınca ek bilgi 
  )
- st.plotly_chart(fig_hist, use_container_width=True)     
+ st.plotly_chart(fig_hist, use_container_width=True)    
+
+# ----------------------------------------
+# SUNBURST CHART — SEASON → CATEGORY SALES
+# Shows total spending grouped by Season and Category
+
+st.subheader("Sunburst Chart")
+st.markdown(
+    "This sunburst chart visualizes how total purchase amounts are distributed "
+    "across different seasons and product categories."
+)
+
+if not filtered.empty:
+    # Create a sunburst chart showing hierarchy: Season -> Category
+    fig_sunburst = px.sunburst(
+        filtered,
+        path=["Season", "Category"],
+        values="Purchase Amount (USD)",
+        color_continuous_scale="Viridis",
+        color="Purchase Amount (USD)",
+        title="Sales Distribution by Season and Category",
+        hover_data={"Purchase Amount (USD)": ":,.2f"}
+    )
+    st.plotly_chart(fig_sunburst, use_container_width=True)
+else:
+    st.warning("No data available for selected filters.")
+
+
+
+# ----------------------------------------
+# BAR CHART — TOTAL SALES BY ITEM
+
+st.subheader("Bar Chart")
+st.markdown(
+    "This bar chart displays the total purchase amount for each item, highlighting the top-selling products."
+)
+
+if not filtered.empty:
+    # Aggregate total sales per item
+    item_sales = (
+        filtered.groupby("Item Purchased")["Purchase Amount (USD)"].sum().reset_index()
+    )
+
+    # Sort descending to show top-selling items at the top
+    item_sales = item_sales.sort_values("Purchase Amount (USD)", ascending=False)
+
+    # Create bar chart
+    fig_bar = px.bar(
+        item_sales,
+        x="Item Purchased",
+        y="Purchase Amount (USD)",
+        color_continuous_scale="Plasma",
+        color="Purchase Amount (USD)",
+        title="Total Sales by Item",
+        hover_data={"Item Purchased": False, "Purchase Amount (USD)": ":,.2f"}
+    )
+
+    st.plotly_chart(fig_bar, use_container_width=True)
+
+else:
+    st.warning("No data available for the selected filters.")
+
+
+# ----------------------------------------
+# GEOGRAPHIC MAP — TOTAL PURCHASE AMOUNT BY STATE
+
+st.subheader("Geographical Distribution of Total Spending")
+st.markdown(
+    "This choropleth map shows total purchase amounts across U.S. states. "
+    
+)
+
+# Eğer Location_Abbr varsa işle
+if "Location_Abbr" in filtered.columns and not filtered.empty:
+    # Aggregate total sales per state
+    geo_df = (
+        filtered.groupby("Location_Abbr")["Purchase Amount (USD)"]
+        .sum()
+        .reset_index()
+    )
+
+    fig_geo = px.choropleth(
+        geo_df,
+        locations="Location_Abbr",          # State abbreviations
+        locationmode="USA-states",
+        color="Purchase Amount (USD)",      # Color by spending
+        color_continuous_scale="Viridis",
+        scope="usa",
+        title="Total Purchase Amount by US State"
+    )
+
+    st.plotly_chart(fig_geo, use_container_width=True)
+
+else:
+    st.warning("Not enough geographical data to generate the map.") 
 
 
 # ----------------------------------------
