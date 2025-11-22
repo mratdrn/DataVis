@@ -12,18 +12,6 @@ import os                          # Dosya işlemleri için OS modülü
 
 
 # ----------------------------------------
-# Machine learning tools like KMeans are optional.
-# try/except ensures Streamlit won't crash if sklearn is not installed.
-
-try:
-    from sklearn.preprocessing import StandardScaler  # Verileri ölçeklemek için
-    from sklearn.cluster import KMeans                # KMeans kümeleme algoritması
-    SKLEARN_AVAILABLE = True                          # Sklearn mevcut bayrağı
-except Exception:
-    SKLEARN_AVAILABLE = False                         # Eğer import başarısızsa False
-
-
-# ----------------------------------------
 # Sets the dashboard title, icon, and wide layout.
 # Standard initialization block for Streamlit applications.
 
@@ -636,7 +624,7 @@ st.markdown(                                         # Kullanıcı bilgilendirme
     "View a snapshot of the filtered dataset below. You can also download the \
     filtered data as a CSV file for further analysis or reporting."
 )
-st.dataframe(filtered.head(50))                      # Datasetin ilk 50 satırını tablo olarak göster
+st.dataframe(filtered.head(20))                      # Datasetin ilk 20 satırını tablo olarak göster
 
 def df_to_csv_bytes(df_):
     return df_.to_csv(index=False).encode("utf-8") 
