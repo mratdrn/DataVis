@@ -426,7 +426,203 @@ if "Location_Abbr" in filtered.columns and not filtered.empty:
     st.plotly_chart(fig_geo, use_container_width=True)
 
 else:
-    st.warning("Not enough geographical data to generate the map.") 
+    st.warning("Not enough geographical data to generate the map.")
+
+
+
+# ----------------------------------------
+# SCATTER PLOT — AGE vs PURCHASE AMOUNT
+st.subheader("Scatter Plot: Age vs Purchase Amount")
+st.markdown("This scatter plot visualizes the relationship between customer age and how much they spend.")
+
+if all(c in filtered.columns for c in ["Age", "Purchase Amount (USD)"]):
+    fig_scatter = px.scatter(
+        filtered,
+        x="Age",
+        y="Purchase Amount (USD)",
+        color="Gender",
+        title="Age vs Purchase Amount",
+        hover_data=["Category", "Season"]
+    )
+    st.plotly_chart(fig_scatter, use_container_width=True)
+
+
+
+# ----------------------------------------
+# HEATMAP — CORRELATION MATRIX
+st.subheader("6. Heatmap: Location vs Category")
+
+if len(filtered) > 0:
+    # 1. Pivot the Data
+    # We use state abbreviations to keep the axis cleaner
+    loc_col = 'Location_Abbr' if 'Location_Abbr' in filtered.columns else 'Location'
+
+    heatmap_data = filtered.pivot_table(
+        index=loc_col,
+        columns='Category',
+        values='Purchase Amount (USD)',
+        aggfunc='mean'
+    ).fillna(0)
+
+    # 2. Sorting - Makes the chart more readable
+    # Sort rows (States) by average spending (Ascending sort works best for the Y-axis visual)
+    heatmap_data['Total_Mean'] = heatmap_data.mean(axis=1)
+    heatmap_data = heatmap_data.sort_values('Total_Mean', ascending=True).drop(columns='Total_Mean')
+
+    # 3. Visualization
+    fig_heatmap = px.imshow(
+        heatmap_data,
+        title="Average Purchase Amount ($) - State vs Category",
+        labels=dict(x="Category", y="State (Abbr)", color="Avg Amount"),
+        color_continuous_scale='YlGnBu',  # A fresher color palette (Yellow-Green-Blue)
+        text_auto=".0f",  # Display values inside cells (no decimals)
+        aspect="auto"
+    )
+
+    # 4. Fine-tuning Layout
+    fig_heatmap.update_layout(
+        height=800,  # Increased height to prevent state labels from overlapping
+        xaxis_title=None,  # Avoid unnecessary label clutter
+        yaxis_title=None,
+        xaxis=dict(side="top")  # Move categories to the top for better readability
+    )
+
+    st.plotly_chart(fig_heatmap, use_container_width=True)
+else:
+    st.warning("No data available to display with these filters.")
+
+
+# ----------------------------------------
+# PARALLEL COORDINATES
+st.subheader("Advanced Multi-Dimensional Analysis")
+st.markdown("""
+**This chart reveals complex relationships within the dataset.** By following the lines from left to right, you can visualize a complete customer journey: 
+starting from their gender, moving through the season, product category, purchase amount, 
+and finally their chosen payment method.
+""")
+
+# 1. Data Preparation: Encoding categorical data into numbers
+# This process allows text values like "Winter" or "Credit Card" to appear on the axes.
+
+plot_df = filtered.copy()
+
+# Define categorical columns and their display labels
+cat_features = {
+    "Gender": "Gender",
+    "Season": "Season",
+    "Category": "Category",
+    "Payment Method": "Payment Method",
+    "Review Rating": "Rating (1-5)"
+}
+
+# Numerical columns
+num_features = ["Age", "Purchase Amount (USD)"]
+
+# Create a list of dimensions (axes) for the plot
+dimensions = []
+
+# -- Gender Axis --
+if "Gender" in plot_df.columns:
+    # Convert categories to codes (e.g., Female=0, Male=1)
+    plot_df["Gender_Code"] = plot_df["Gender"].astype("category").cat.codes
+    # Get the actual names for the axis ticks
+    g_names = plot_df["Gender"].astype("category").cat.categories
+
+    dimensions.append(dict(
+        range=[0, len(g_names) - 1],
+        tickvals=list(range(len(g_names))),
+        ticktext=list(g_names),
+        label="Gender",
+        values=plot_df["Gender_Code"]
+    ))
+
+# -- Age Axis (Numerical) --
+if "Age" in plot_df.columns:
+    dimensions.append(dict(
+        range=[plot_df["Age"].min(), plot_df["Age"].max()],
+        label="Age",
+        values=plot_df["Age"]
+    ))
+
+# -- Season Axis --
+if "Season" in plot_df.columns:
+    plot_df["Season_Code"] = plot_df["Season"].astype("category").cat.codes
+    s_names = plot_df["Season"].astype("category").cat.categories
+
+    dimensions.append(dict(
+        range=[0, len(s_names) - 1],
+        tickvals=list(range(len(s_names))),
+        ticktext=list(s_names),
+        label="Season",
+        values=plot_df["Season_Code"]
+    ))
+
+# -- Category Axis --
+if "Category" in plot_df.columns:
+    plot_df["Cat_Code"] = plot_df["Category"].astype("category").cat.codes
+    c_names = plot_df["Category"].astype("category").cat.categories
+
+    dimensions.append(dict(
+        range=[0, len(c_names) - 1],
+        tickvals=list(range(len(c_names))),
+        ticktext=list(c_names),
+        label="Category",
+        values=plot_df["Cat_Code"]
+    ))
+
+# -- Purchase Amount Axis (Numerical - Main Focus) --
+if "Purchase Amount (USD)" in plot_df.columns:
+    dimensions.append(dict(
+        range=[plot_df["Purchase Amount (USD)"].min(), plot_df["Purchase Amount (USD)"].max()],
+        label="Spend ($)",
+        values=plot_df["Purchase Amount (USD)"]
+    ))
+
+# -- Payment Method Axis --
+if "Payment Method" in plot_df.columns:
+    plot_df["Pay_Code"] = plot_df["Payment Method"].astype("category").cat.codes
+    p_names = plot_df["Payment Method"].astype("category").cat.categories
+
+    dimensions.append(dict(
+        range=[0, len(p_names) - 1],
+        tickvals=list(range(len(p_names))),
+        ticktext=list(p_names),
+        label="Payment",
+        values=plot_df["Pay_Code"]
+    ))
+
+# -- Review Rating Axis --
+if "Review Rating" in plot_df.columns:
+    dimensions.append(dict(
+        range=[1, 5],
+        label="Rating",
+        values=plot_df["Review Rating"]
+    ))
+
+# 2. Generating the Chart (Using Go.Parcoords)
+if len(plot_df) > 0:
+    fig_complex = go.Figure(data=
+    go.Parcoords(
+        line=dict(
+            color=plot_df["Purchase Amount (USD)"],  # Color lines based on spending
+            colorscale="Turbo",  # Vibrant, high-contrast color scale
+            showscale=True,
+            cmin=plot_df["Purchase Amount (USD)"].min(),
+            cmax=plot_df["Purchase Amount (USD)"].max()
+        ),
+        dimensions=dimensions  # The list of axes we prepared above
+    )
+    )
+
+    fig_complex.update_layout(
+        title="Complex Analysis: Customer Journey Flow",
+        height=600,  # Increase height for better visibility
+        font=dict(size=11)  # Adjust font size for readability
+    )
+
+    st.plotly_chart(fig_complex, use_container_width=True)
+else:
+    st.warning("Not enough data available to generate this chart.")
 
 
 # ----------------------------------------
