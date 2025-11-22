@@ -32,6 +32,28 @@ st.set_page_config(
     page_icon="✈️",                                     # Sekme ikonu (emoji)
     layout="wide"                                        # Geniş ekran düzeni
 )
+ 
+
+# ----------------------------------------
+# We added CSS to improve the look.
+# Triple quotes (""") are used to define multi-line CSS strings.
+
+st.markdown("""
+<style>
+h1 {
+     font-size: 60px !important;               /* Başlık font büyüklüğünü belirtip !important ile override edilmesini önlüyoruz */         
+     background: linear-gradient(90deg, #FF4B4B, #FF914D, #FFD700, #4CAF50, #1E90FF, #8A2BE2);
+                                               /* Başlığa soldan sağa geçişli renk gradienti uyguluyoruz
+                                                Renk sırası: kırmızı → turuncu → sarı → yeşil → mavi → mor */
+            
+     -webkit-background-clip: text;            /* Gradient’in sadece metin üzerinde görünmesini sağlar */          
+     -webkit-text-fill-color: transparent;     /* Arka plan yerine gradientin gözükmesi için metni şeffaf yapar */    
+     font-weight: bold;                        /* Kalın font uygular */  
+     padding-bottom: 10px;                     /* Başlığın altına boşluk ekler, diğer içerik ile çakışmayı önler */  
+}
+</style>
+""", unsafe_allow_html=True)
+
 
 # ----------------------------------------
 st.title("Shopping Behavior Dashboard")       # Sayfa başlığı
