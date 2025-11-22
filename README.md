@@ -40,7 +40,7 @@ Shows total spending grouped by Season and Category
 ### **Bar Chart**  
 Displays the total purchase amount for each item, highlighting the top-selling products.
 
-### **GEOGRAPHIC MAP**  
+### **Geographic Map**  
 This choropleth map shows total purchase amounts across U.S. states.
     
 ### **Scatter Plot**  
@@ -57,7 +57,6 @@ Advanced multi-dimensional analysis combining:
 - Category  
 - Spend  
 - Payment Method  
-- (Optional) Rating  
 
 ---
 
@@ -76,7 +75,7 @@ The application automatically:
 
 ---
 
-##Tech Stack
+## Tech Stack
 
 | Tool | Purpose |
 |------|---------|
@@ -84,7 +83,6 @@ The application automatically:
 | **Streamlit** | Web dashboard framework |
 | **Pandas / NumPy** | Data transformation |
 | **Plotly Express & Graph Objects** | Interactive visualizations |
-| **Scikit-learn (optional)** | Scaling & clustering (KMeans) |
 
 ---
 
